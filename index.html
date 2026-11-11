@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerPulse - Elite Career Tracking Platform for Android</title>
+    <meta name="description" content="CareerPulse is an elite career tracking platform for Android users. Billed daily at 2.78 BDT (including VAT + SC + SD) for Robi & Airtel. Download APK now.">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eefcf5',
+                            100: '#d5f8e5',
+                            200: '#aef0ce',
+                            300: '#7ce4b1',
+                            400: '#46d190',
+                            500: '#21b876',
+                            600: '#04bf68',
+                            700: '#0ea45b',
+                            800: '#11814b',
+                            900: '#106a40',
+                            950: '#083c25',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://i.imgur.com/vFD9t1p.png">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans selection:bg-primary/20 transition-colors dark:bg-slate-950 dark:text-slate-50 min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header -->
+    <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur z-40 sticky top-0">
+        <div class="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                <img src="https://i.imgur.com/vFD9t1p.png" alt="CareerPulse Logo" class="w-10 h-10 rounded-md object-contain">
+                <span class="font-bold text-xl tracking-tight">CareerPulse<span class="text-primary-600">.</span></span>
+                <span class="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-300 ml-2">
+                    <i data-lucide="smartphone" class="w-3 h-3"></i> Android
+                </span>
+            </div>
+            <nav class="flex items-center gap-3 md:gap-4">
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Theme">
+                    <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                </button>
+                <div id="nav-unauth" class="flex items-center gap-2 sm:gap-4">
+                    <button class="hidden md:flex text-sm font-medium hover:text-primary-600 transition-colors" onclick="document.getElementById('features').scrollIntoView({ behavior: 'smooth' })">
+                        Features
+                    </button>
+                    <button class="hidden sm:flex text-sm font-medium hover:text-primary-600 transition-colors" onclick="document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })">
+                        Pricing
+                    </button>
+                    <button class="hidden sm:flex text-sm font-medium hover:text-primary-600 transition-colors" onclick="openDocumentationModal()">
+                        Docs
+                    </button>
+                    <button class="hidden md:flex text-sm font-medium hover:text-primary-600 transition-colors" onclick="document.getElementById('faq').scrollIntoView({ behavior: 'smooth' })">
+                        FAQ
+                    </button>
+                    <button type="button" onclick="document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' }); if(typeof showToast==='function') showToast('Please subscribe to download the app', 'error');" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md text-primary-700 bg-primary-50 border border-primary-200 hover:bg-primary-100 dark:bg-primary-950/40 dark:border-primary-900/50 dark:text-primary-300 transition-colors">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> APK
+                    </button>
+                    <button class="px-4 py-2 text-sm font-medium bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors shadow-sm" onclick="document.getElementById('login').scrollIntoView({ behavior: 'smooth' })">
+                        Login
+                    </button>
+                </div>
+                <div id="nav-auth" class="hidden items-center gap-2 sm:gap-3">
+                    <div id="subscription-status-badge" class="flex items-center gap-1.5 px-3 py-1 bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 rounded-full text-xs font-semibold border border-primary-200 dark:border-primary-500/20">
+                        <i data-lucide="crown" class="w-4 h-4"></i> <span>Active</span>
+                    </div>
+
+                    <!-- User Menu Dropdown -->
+                    <div class="relative" id="user-menu-container">
+                        <button id="userMenuBtn" onclick="toggleUserMenu(event)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-xs font-medium" title="Account Menu">
+                            <i data-lucide="menu" class="w-4 h-4 text-primary-600"></i>
+                            <span class="hidden sm:inline font-semibold">Menu</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                        </button>
+
+                        <!-- Dropdown Menu Box -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50 glass-card">
+                            <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                                <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Account Status</p>
+                                <p class="text-xs font-bold text-primary-600 dark:text-primary-400 truncate" id="user-phone-display">Active Subscriber</p>
+                            </div>
+                            
+                            <a href="https://bdappsdigitalapps.com/NADB26131/apk/CareerPulse.apk" target="_blank" download onclick="closeUserMenu()" class="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-primary-600 transition-colors">
+                                <i data-lucide="download" class="w-4 h-4 text-primary-600"></i> Download APK
+                            </a>
+                            
+                            <button onclick="toggleDarkMode(); closeUserMenu();" class="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-primary-600 transition-colors">
+                                <span class="flex items-center gap-3">
+                                    <i data-lucide="moon" class="w-4 h-4 dark:hidden text-slate-500"></i>
+                                    <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+                                    Theme Mode
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-semibold uppercase dark:hidden">Light</span>
+                                <span class="text-[10px] text-slate-400 font-semibold uppercase hidden dark:inline">Dark</span>
+                            </button>
+
+                            <button onclick="openDocumentationModal(); closeUserMenu();" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-primary-600 transition-colors">
+                                <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i> Documentation
+                            </button>
+
+                            <div class="border-t border-slate-100 dark:border-slate-800/80 my-1"></div>
+
+                            <button id="unsubscribeBtn" onclick="closeUserMenu()" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950/40 transition-colors">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i> Unsubscribe
+                            </button>
+
+                            <button onclick="handleLogout(); closeUserMenu();" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
+                                <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- App Container -->
+    <main class="flex-1 w-full" id="app-container">
+        <!-- Landing Page Section -->
+        <div id="view-landing" class="block">
+            <!-- Hero Section -->
+            <section class="py-16 md:py-24 px-4 text-center max-w-4xl mx-auto">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium mb-6 border border-slate-200 dark:border-slate-700">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-primary-600"></i> Supported Platform: <strong>Android</strong>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 text-slate-900 dark:text-white">
+                    Get an unfair advantage in the <span class="text-primary-600">job market.</span>
+                </h1>
+                <p class="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto">
+                    CareerPulse is an elite career tracking platform & job match suite for Android. Billed daily at <strong>2.78 BDT (including VAT + SC + SD)</strong> for Robi & Airtel subscribers.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button type="button" onclick="document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' }); if(typeof showToast==='function') showToast('Please subscribe to download the app', 'error');" class="flex items-center justify-center px-8 py-3.5 text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 md:text-lg transition-colors shadow-lg shadow-primary-500/30">
+                        Download APK <i data-lucide="download" class="ml-2 w-5 h-5"></i>
+                    </button>
+                    <button onclick="document.getElementById('login').scrollIntoView({ behavior: 'smooth' })" class="flex items-center justify-center px-8 py-3.5 text-base font-medium rounded-md text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 md:text-lg transition-colors">
+                        Subscribe Now
+                    </button>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features" class="py-16 bg-slate-100/50 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800 px-4">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Key Features</h2>
+                        <p class="text-slate-600 dark:text-slate-400 mt-2">Comprehensive tools built to streamline your job search and boost application success.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm glass-card">
+                            <div class="w-12 h-12 rounded-lg bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 mb-4 border border-primary-100 dark:border-primary-900/50">
+                                <i data-lucide="briefcase" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">Application Timeline</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">Organize and monitor all job applications from initial bookmarking to final interview stage.</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm glass-card">
+                            <div class="w-12 h-12 rounded-lg bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 mb-4 border border-primary-100 dark:border-primary-900/50">
+                                <i data-lucide="bell-ring" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">Smart Alerts Hub</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">Automated discovery notifications aligned with your target job roles, skills, and locations.</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm glass-card">
+                            <div class="w-12 h-12 rounded-lg bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 mb-4 border border-primary-100 dark:border-primary-900/50">
+                                <i data-lucide="activity" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">Real-time Analytics</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">Visual tracking charts and metrics highlighting your application momentum and progress over time.</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm glass-card">
+                            <div class="w-12 h-12 rounded-lg bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 mb-4 border border-primary-100 dark:border-primary-900/50">
+                                <i data-lucide="percent" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">AI Compatibility Match</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">Instant match scores calculating how well your background aligns with target job requirements.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing & Subscription Section -->
+            <section id="pricing" class="py-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4">
+                <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                    
+                    <!-- Pricing Info -->
+                    <div class="space-y-6">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 text-sm font-medium border border-primary-200 dark:border-primary-800/50">
+                            <i data-lucide="zap" class="w-4 h-4"></i> Micro-Subscription Plan
+                        </div>
+                        <h2 class="text-3xl font-bold tracking-tight">Everything you need for just 2.78 BDT (including VAT + SC + SD) daily.</h2>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Affordable, elite-tier career management tools. Billed daily at <strong>2.78 BDT (including VAT + SC + SD)</strong> directly via your Robi or Airtel mobile balance.
+                        </p>
+                        
+                        <ul class="space-y-3 mt-6">
+                            <li class="flex items-center gap-3">
+                                <i data-lucide="check-circle-2" class="w-5 h-5 text-primary-600 shrink-0"></i>
+                                <span>Supported Platform: Android</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i data-lucide="check-circle-2" class="w-5 h-5 text-primary-600 shrink-0"></i>
+                                <span>Interactive Application Timeline</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i data-lucide="check-circle-2" class="w-5 h-5 text-primary-600 shrink-0"></i>
+                                <span>Real-time Progress Analytics</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i data-lucide="check-circle-2" class="w-5 h-5 text-primary-600 shrink-0"></i>
+                                <span>Smart Job Alerts Hub</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i data-lucide="check-circle-2" class="w-5 h-5 text-primary-600 shrink-0"></i>
+                                <span>AI Compatibility Match Scores</span>
+                            </li>
+                        </ul>
+                        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs text-slate-500 dark:text-slate-400">
+                            <strong>Supported Operators:</strong> Robi & Airtel subscribers only. Billed at 2.78 BDT (including VAT + SC + SD)/day (auto-renewable). Cancel anytime.
+                        </div>
+                    </div>
+
+                    <!-- Login / Reg Card -->
+                    <div id="login" class="bg-slate-50 dark:bg-slate-950 p-5 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl relative overflow-hidden glass-card min-h-[350px]">
+                        <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-primary-600/10 rounded-full blur-2xl"></div>
+                        
+                        <h3 class="text-2xl font-bold mb-2" id="login-title">Join CareerPulse Elite</h3>
+                        <p class="text-slate-500 text-sm mb-6" id="login-desc">
+                            2.78 BDT (including VAT + SC + SD) / day (Auto-renewable). Cancel anytime.
+                        </p>
+
+                        <!-- Phone Subscription Flow -->
+                        <div id="phone-subscription-flow">
+                            <form id="form-phone" onsubmit="handlePhoneSubmit(event)" class="space-y-4">
+                                <div class="space-y-2">
+                                    <label for="phone" class="text-sm font-medium leading-none flex justify-between">
+                                        <span>Mobile Number</span>
+                                        <span class="text-xs text-primary-600 font-semibold">Robi / Airtel</span>
+                                    </label>
+                                    <input type="tel" id="phone" placeholder="018XXXXXXXX or 016XXXXXXXX" class="flex h-12 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-lg ring-offset-white dark:ring-offset-slate-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600" required>
+                                </div>
+                                <button type="submit" id="btn-phone" class="inline-flex items-center justify-center rounded-md text-md font-medium bg-primary-600 text-white hover:bg-primary-700 h-12 px-4 py-2 w-full shadow-sm disabled:opacity-50 transition-colors">
+                                    Continue
+                                </button>
+                            </form>
+
+                            <form id="form-otp" onsubmit="handleVerifyOTP(event)" class="space-y-4 hidden mt-2">
+                                <div class="p-3 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 rounded-md text-sm mb-4 border border-primary-200 dark:border-primary-800 flex items-start gap-2">
+                                    <i data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p>OTP sent to <span id="display-phone" class="font-bold"></span></p>
+                                        <button type="button" onclick="editPhoneNumber()" class="text-primary-600 dark:text-primary-400 font-medium hover:underline text-xs mt-1">Wrong number? Edit</button>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <label for="otp" class="text-sm font-medium leading-none">Verification Code (OTP)</label>
+                                    <input type="text" id="otp" placeholder="Enter OTP" class="flex h-12 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xl tracking-widest text-center ring-offset-white dark:ring-offset-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 transition-colors" required maxlength="6" autocomplete="one-time-code">
+                                </div>
+                                <div class="flex gap-3">
+                                    <button type="button" id="btn-otp-back" onclick="editPhoneNumber()" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-slate-300 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 h-12 w-1/3 transition-colors">
+                                        Back
+                                    </button>
+                                    <button type="submit" id="btn-otp" class="inline-flex items-center justify-center rounded-md text-md font-medium bg-primary-600 text-white hover:bg-primary-700 h-12 w-2/3 shadow-sm transition-colors disabled:opacity-50">
+                                        Verify & Subscribe
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i> Secured by BDApps
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section id="faq" class="py-16 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 px-4">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-12">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 text-sm font-medium border border-primary-200 dark:border-primary-800/50 mb-3">
+                            <i data-lucide="help-circle" class="w-4 h-4"></i> Help & Support
+                        </div>
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+                        <p class="text-slate-600 dark:text-slate-400 mt-2">Everything you need to know about CareerPulse features, subscription, and installation.</p>
+                    </div>
+
+                    <div class="space-y-4" id="faq-accordion">
+                        <!-- FAQ Item 1 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(1)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="briefcase" class="w-5 h-5 text-primary-600 shrink-0"></i> What is CareerPulse?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-1" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-1" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                CareerPulse is an elite career tracking platform and job application management suite designed specifically for Android users in Bangladesh. It provides real-time progress analytics, job alert monitoring, match scoring, and application timeline management.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 2 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(2)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="smartphone" class="w-5 h-5 text-primary-600 shrink-0"></i> How to install CareerPulse on Android?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-2" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-2" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                Download the official APK directly using the "Download APK" button on our website (or link: <button type="button" onclick="document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' }); if(typeof showToast==='function') showToast('Please subscribe to download the app', 'error');" class="text-primary-600 underline font-medium">CareerPulse.apk</button>). Open the downloaded APK on your Android device and tap "Install". Ensure your device permissions allow installing apps from external sources.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 3 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(3)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="zap" class="w-5 h-5 text-primary-600 shrink-0"></i> How to subscribe to CareerPulse?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-3" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-3" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                Enter your Robi or Airtel mobile number in the subscription card on the landing page or in the mobile application. You will instantly receive a 6-digit OTP via SMS. Enter the OTP to confirm subscription and unlock full access.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 4 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(4)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="dollar-sign" class="w-5 h-5 text-primary-600 shrink-0"></i> What is the subscription charge?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-4" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-4" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                The subscription charge is <strong>2.78 BDT (including VAT + SC + SD)</strong> per day. The service is auto-renewable until unsubscribed.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 5 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(5)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-primary-600 shrink-0"></i> Which mobile operators are supported?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-5" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-5" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                CareerPulse subscription service is currently supported exclusively for active <strong>Robi</strong> and <strong>Airtel</strong> subscribers in Bangladesh via BDApps platform integration.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 6 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(6)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="lock" class="w-5 h-5 text-primary-600 shrink-0"></i> How do I log in?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-6" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-6" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                Enter your registered Robi or Airtel mobile number on the login section. If your subscription is active, you will be authenticated instantly to access your dashboard.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 7 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(7)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="log-out" class="w-5 h-5 text-primary-600 shrink-0"></i> How do I log out?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-7" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-7" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                Click the Logout icon located at the top-right corner of the top navigation bar. After logging out, you will return safely to the landing page.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 8 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(8)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="x" class="w-5 h-5 text-primary-600 shrink-0"></i> How do I unsubscribe?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-8" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-8" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                You can unsubscribe anytime by logging into the app and clicking the "Unsubscribe" button in the top navigation bar. You can also cancel via BDApps USSD/SMS menu options provided by your mobile operator.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 9 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(9)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-primary-600 shrink-0"></i> How can I contact customer support?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-9" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-9" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                If you need assistance or technical help, please contact our support team at <a href="mailto:support@bdappsdigitalapps.com" class="text-primary-600 font-semibold underline">support@bdappsdigitalapps.com</a>.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 10 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(10)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="shield-check" class="w-5 h-5 text-primary-600 shrink-0"></i> Is my privacy and data secure?</span>
+                                <i data-lucide="chevron-down" id="faq-icon-10" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-10" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                Yes. We utilize industry-standard encryption protocols and strict data privacy guidelines. Your user data is protected and never sold to third parties.
+                            </div>
+                        </div>
+
+                        <!-- FAQ Item 11 -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                            <button onclick="toggleFaq(11)" class="w-full p-5 text-left font-semibold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <span class="flex items-center gap-3"><i data-lucide="info" class="w-5 h-5 text-primary-600 shrink-0"></i> Troubleshooting & Common Issues</span>
+                                <i data-lucide="chevron-down" id="faq-icon-11" class="w-5 h-5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="faq-answer-11" class="hidden p-5 pt-0 text-slate-600 dark:text-slate-400 text-sm border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                                If SMS OTP is delayed, check your cellular network signal and ensure your phone is not blocking promotional SMS. If you face installation warnings on Android, verify that "Install Unknown Apps" permission is allowed in your device security settings.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="view-dashboard" class="hidden container max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
+            
+            <!-- Mobile App Download Banner for Subscribed Users -->
+            <section class="bg-gradient-to-r from-primary-600/10 via-primary-500/5 to-transparent border border-primary-500/20 rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-card shadow-sm">
+                <div class="flex items-start sm:items-center gap-3 sm:gap-4">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-600 text-white flex items-center justify-center shadow-lg shadow-primary-500/30 flex-shrink-0 mt-0.5 sm:mt-0">
+                        <i data-lucide="smartphone" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">CareerPulse Android Application</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">Your subscription is active! Download and install the official APK to access all features on your mobile device.</p>
+                    </div>
+                </div>
+                <a href="https://bdappsdigitalapps.com/NADB26131/apk/CareerPulse.apk" target="_blank" download class="w-full md:w-auto px-5 py-2.5 sm:px-6 sm:py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-primary-500/20 flex items-center justify-center gap-2 whitespace-nowrap">
+                    <i data-lucide="download" class="w-4 h-4"></i> Download APK
+                </a>
+            </section>
+
+            <section class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 sm:gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-1 sm:mb-2">Welcome back!</h1>
+                    <p class="text-slate-500 text-sm sm:text-lg">You have <strong class="text-slate-900 dark:text-white" id="dashboard-count">3</strong> upcoming deadlines this week.</p>
+                </div>
+                <button class="inline-flex items-center justify-center rounded-md text-xs sm:text-sm font-medium bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 h-10 sm:h-11 px-4 sm:px-8 shadow-sm transition-colors group w-full sm:w-auto">
+                    <i data-lucide="sparkles" class="w-4 h-4 mr-2 group-hover:text-primary-500 transition-colors"></i>
+                    Find New Opportunities
+                </button>
+            </section>
+
+            <!-- Custom Tabs Implementation -->
+            <div class="w-full">
+                <div class="flex space-x-1 sm:space-x-2 border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 overflow-x-auto hide-scrollbar pb-1">
+                    <button class="tab-btn active-tab px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 border-primary-600 text-primary-600 flex items-center transition-colors whitespace-nowrap" onclick="switchTab('dashboard-tab')">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4 mr-1.5 sm:mr-2"></i> Dashboard
+                    </button>
+                    <button class="tab-btn px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center transition-colors whitespace-nowrap" onclick="switchTab('alerts-tab')">
+                        <i data-lucide="bell-ring" class="w-4 h-4 mr-1.5 sm:mr-2"></i> Alerts
+                    </button>
+                    <button class="tab-btn px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center transition-colors whitespace-nowrap" onclick="switchTab('analytics-tab')">
+                        <i data-lucide="activity" class="w-4 h-4 mr-1.5 sm:mr-2"></i> Analytics
+                    </button>
+                </div>
+
+                <!-- Dashboard Tab -->
+                <div id="dashboard-tab" class="tab-content block space-y-10 fade-in">
+                    <section class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-semibold tracking-tight flex items-center">
+                                <i data-lucide="briefcase" class="w-5 h-5 mr-2 text-primary-600"></i>
+                                Application Timeline
+                            </h2>
+                        </div>
+                        
+                        <!-- Timeline Horizontal Scroll -->
+                        <div class="w-full overflow-x-auto pb-4 hide-scrollbar">
+                            <div class="flex gap-4 min-w-max px-2" id="timeline-container">
+                                <!-- Cards injected via JS -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                        <section class="space-y-4">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden h-[280px] sm:h-[400px] flex flex-col glass-card">
+                                <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+                                    <h3 class="font-semibold text-base sm:text-lg">Application Progress</h3>
+                                    <p class="text-xs sm:text-sm text-slate-500">Your job search momentum over the past month</p>
+                                </div>
+                                <div class="p-4 sm:p-6 flex-1 relative w-full h-full">
+                                    <canvas id="progressChart"></canvas>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="space-y-4">
+                            <!-- Alert Hub Preview -->
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h2 class="text-lg sm:text-xl font-semibold tracking-tight">Active Alerts</h2>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-4" id="alert-preview-container">
+                                <!-- Alerts injected via JS -->
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Alerts Tab -->
+                <div id="alerts-tab" class="tab-content hidden fade-in">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Smart Alerts Hub</h2>
+                                <p class="text-xs sm:text-sm text-slate-500">Manage your automated job discovery</p>
+                            </div>
+                            <button class="w-full sm:w-auto inline-flex items-center justify-center rounded-md text-xs sm:text-sm font-medium border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 h-9 px-4 transition-colors">
+                                <i data-lucide="bell" class="w-4 h-4 mr-2"></i> Create Alert
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="alert-full-container">
+                            <!-- Alerts injected via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-content hidden fade-in">
+                    <div class="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight mb-4 sm:mb-6">Performance Metrics</h2>
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-4 sm:p-6 glass-card h-[300px] sm:h-[500px]">
+                            <canvas id="fullProgressChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Documentation Modal (Accessible before & after login) -->
+    <div id="documentation-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="book-open" class="w-6 h-6 text-primary-600"></i>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">CareerPulse Documentation</h2>
+                </div>
+                <button onclick="closeDocumentationModal()" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-8 flex-1 text-slate-700 dark:text-slate-300">
+                <!-- Doc 1: Overview -->
+                <section>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="info" class="w-5 h-5 text-primary-600"></i> 1. App Overview
+                    </h3>
+                    <p class="text-sm leading-relaxed mb-3">
+                        <strong>CareerPulse</strong> is a premium career tracking platform built specifically for job seekers on Android devices. It enables users to record job applications, track recruitment progress across interactive timelines, configure smart job alert monitors, analyze performance metrics, and calculate AI job match compatibility scores.
+                    </p>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-950/50 dark:text-primary-400 text-xs font-semibold border border-primary-200 dark:border-primary-900/50">
+                        Supported Platform: Android (v1.0.0)
+                    </div>
+                </section>
+
+                <!-- Doc 2: Installation -->
+                <section class="border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5 text-primary-600"></i> 2. Installation Guide
+                    </h3>
+                    <ol class="list-decimal list-inside text-sm space-y-2 leading-relaxed">
+                        <li>Click the <strong>Download APK</strong> button on the landing page or scroll to: <button type="button" onclick="closeDocumentationModal(); document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' }); if(typeof showToast==='function') showToast('Please subscribe to download the app', 'error');" class="text-primary-600 underline font-medium">Pricing & Subscription</button></li>
+                        <li>Once downloaded, locate <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs">CareerPulse.apk</code> in your Android device's Downloads folder.</li>
+                        <li>Tap the file to initiate installation. If prompted, enable "Install Unknown Apps" in your Android Security Settings.</li>
+                        <li>Once installed, tap the CareerPulse app icon on your home screen or app drawer to launch.</li>
+                    </ol>
+                </section>
+
+                <!-- Doc 3: Login Guide -->
+                <section class="border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="lock" class="w-5 h-5 text-primary-600"></i> 3. Login & Subscription Guide
+                    </h3>
+                    <ol class="list-decimal list-inside text-sm space-y-2 leading-relaxed">
+                        <li>Navigate to the Login / Subscription card on the website or open the CareerPulse mobile application.</li>
+                        <li>Enter your active <strong>Robi</strong> or <strong>Airtel</strong> mobile number (e.g. 018XXXXXXXX or 016XXXXXXXX).</li>
+                        <li>Tap <strong>Continue</strong> to request a 6-digit OTP via SMS.</li>
+                        <li>Enter the received 6-digit OTP code into the verification input field and tap <strong>Verify & Subscribe</strong>.</li>
+                        <li>Upon successful verification, your daily micro-subscription of <strong>2.78 BDT (including VAT + SC + SD)</strong> will activate and you will be redirected to your dashboard.</li>
+                    </ol>
+                </section>
+
+                <!-- Doc 4: Usage Guide -->
+                <section class="border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 text-primary-600"></i> 4. Usage Guide
+                    </h3>
+                    <ul class="list-disc list-inside text-sm space-y-2 leading-relaxed">
+                        <li><strong>Dashboard & Timeline:</strong> View your active job applications sorted by deadline. Track application status (Saved, Applied, Interviewing).</li>
+                        <li><strong>Smart Alerts:</strong> Create and toggle keyword-driven job search alerts for continuous monitoring.</li>
+                        <li><strong>Analytics:</strong> Review weekly application trends and response metrics in interactive line graphs.</li>
+                    </ul>
+                </section>
+
+                <!-- Doc 5: Subscription Information -->
+                <section class="border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-5 h-5 text-primary-600"></i> 5. Subscription Information
+                    </h3>
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-sm space-y-2">
+                        <p><strong>Daily Subscription Rate:</strong> 2.78 BDT (including VAT + SC + SD)</p>
+                        <p><strong>Supported Operators:</strong> Robi and Airtel subscribers only.</p>
+                        <p><strong>Billing Cycle:</strong> Daily auto-renewable subscription billed via mobile airtime balance.</p>
+                        <p><strong>Renewal:</strong> Automatically renews daily unless explicitly unsubscribed by the user.</p>
+                    </div>
+                </section>
+
+                <!-- Doc 6: Logout Instructions -->
+                <section class="border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="log-out" class="w-5 h-5 text-primary-600"></i> 6. Logout & Unsubscription Instructions
+                    </h3>
+                    <p class="text-sm leading-relaxed mb-2">
+                        <strong>Logging Out:</strong> Click the Logout icon in the top header menu. Logging out signs you out of the portal while preserving your subscription.
+                    </p>
+                    <p class="text-sm leading-relaxed">
+                        <strong>Unsubscribing:</strong> Click the "Unsubscribe" button in the top navigation bar when logged in, or follow the BDApps operator USSD/SMS cancellation instructions.
+                    </p>
+                </section>
+
+                <!-- Doc 7: Contact Information -->
+                <section class="border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="mail" class="w-5 h-5 text-primary-600"></i> 7. Contact Information
+                    </h3>
+                    <p class="text-sm leading-relaxed">
+                        For support, inquiries, or billing assistance:
+                    </p>
+                    <div class="mt-2 text-sm space-y-1 font-medium">
+                        <p>Email Support: <a href="mailto:support@bdappsdigitalapps.com" class="text-primary-600 underline">support@bdappsdigitalapps.com</a></p>
+                        <p>Platform Provider: BDApps Digital Platform</p>
+                    </div>
+                </section>
+
+                <!-- Doc 8: Privacy & Security -->
+                <section class="border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-primary-600"></i> 8. Privacy & Security Information
+                    </h3>
+                    <p class="text-sm leading-relaxed">
+                        CareerPulse is committed to protecting your privacy. We collect minimal phone authentication data to fulfill mobile billing and account authorization. No user tracking data is sold to third parties. All communications are transmitted over secure HTTPS channels.
+                    </p>
+                </section>
+            </div>
+            
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex justify-end">
+                <button onclick="closeDocumentationModal()" class="px-5 py-2 text-sm font-medium bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors">
+                    Close Documentation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 py-10 text-sm text-slate-500 bg-white/50 dark:bg-slate-950/50 backdrop-blur mt-auto">
+        <div class="container max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="space-y-3 md:col-span-2">
+                <div class="flex items-center gap-2">
+                    <img src="https://i.imgur.com/vFD9t1p.png" alt="CareerPulse Logo" class="w-8 h-8 rounded object-contain">
+                    <span class="font-bold text-lg text-slate-900 dark:text-white">CareerPulse<span class="text-primary-600">.</span></span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+                    Elite career tracking & job match platform for Android. Billed at 2.78 BDT (including VAT + SC + SD)/day for Robi & Airtel users via BDApps.
+                </p>
+                <div class="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-primary-600"></i> Supported Platform: <strong>Android</strong>
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <h4 class="font-semibold text-slate-900 dark:text-white text-xs uppercase tracking-wider">Quick Links</h4>
+                <ul class="space-y-1.5 text-xs">
+                    <li><button onclick="document.getElementById('features').scrollIntoView({ behavior: 'smooth' })" class="hover:text-primary-600 transition-colors">Features</button></li>
+                    <li><button onclick="document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })" class="hover:text-primary-600 transition-colors">Pricing</button></li>
+                    <li><button onclick="openDocumentationModal()" class="hover:text-primary-600 transition-colors">Documentation</button></li>
+                    <li><button onclick="document.getElementById('faq').scrollIntoView({ behavior: 'smooth' })" class="hover:text-primary-600 transition-colors">FAQ</button></li>
+                    <li><button type="button" onclick="document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' }); if(typeof showToast==='function') showToast('Please subscribe to download the app', 'error');" class="text-primary-600 font-semibold hover:underline">Download APK</button></li>
+                </ul>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-semibold text-slate-900 dark:text-white text-xs uppercase tracking-wider">Support</h4>
+                <ul class="space-y-1.5 text-xs">
+                    <li>Email: <a href="mailto:support@bdappsdigitalapps.com" class="hover:text-primary-600 transition-colors">support@bdappsdigitalapps.com</a></li>
+                    <li>Service Charge: 2.78 BDT (including VAT + SC + SD)</li>
+                    <li>Operators: Robi & Airtel</li>
+                    <li class="pt-1 flex items-center gap-1 text-slate-400"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-primary-600"></i> Powered by BDApps</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="container max-w-6xl mx-auto px-4 border-t border-slate-200 dark:border-slate-800/80 pt-6 text-center text-xs text-slate-500">
+            &copy; <span id="year"></span> CareerPulse. All rights reserved. Supported Platform: Android.
+        </div>
+    </footer>
+
+    <!-- App Logic -->
+    <script src="api.js?v=4"></script>
+    <script src="app.js?v=5"></script>
+</body>
+</html>
+

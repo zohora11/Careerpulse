@@ -1,0 +1,6 @@
+{
+  "name": "CareerPulse Web",
+  "description": "An elite, high-performance career tracking platform for Android with a 2.78 BDT (including VAT + SC + SD)/day micro-subscription service for Robi & Airtel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
